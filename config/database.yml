@@ -1,0 +1,36 @@
+default: &default
+  adapter: jdbc
+
+jruby:
+  development:
+    <<: *default
+    database: sqlite:db/development.sqlite3
+
+  test:
+    <<: *default
+    database: sqlite:db/test.sqlite3
+
+  production:
+    <<: *default
+    database: jtds:sqlserver://<%= ENV['DB_SERVER'] %>/<%= ENV['DATABASE'] %>;user=<%= ENV['DB_USER'] %>;password=<%= ENV['PASSWORD'] %>
+
+ruby:
+  default: &default_ruby
+    adapter: tinytds
+
+  development:
+    <<: *default_ruby
+    adapter: sqlite
+    database: db/development.sqlite3   # if memory, set it to empty
+
+  test:
+    <<: *default_ruby
+    adapter: sqlite
+    database: db/test.sqlite3
+
+  production:
+    <<: *default_ruby
+    user: <%= ENV['DB_USER'] %>
+    password: <%= ENV['PASSWORD'] %>
+    database: <%= ENV['DATABASE'] %>
+    dataserver: <%= ENV['DB_SERVER'] %>
