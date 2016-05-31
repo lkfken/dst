@@ -1,9 +1,8 @@
-require 'bundler'
-Bundler.require(:default)
 require 'dotenv'
 Dotenv.load!
+require 'bundler'
+Bundler.require
 
-require 'sequel_connect'
 require_relative 'dst/disenroll_record'
 require_relative 'dst/group'
 require_relative 'dst/lob240_benefit_plan_history'
