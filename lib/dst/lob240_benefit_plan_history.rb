@@ -4,22 +4,23 @@ module DST
 
     def_column_alias :name, :cur_ben_plan
 
+    ########## associations ##########
+
     many_to_one :member
 
-    def eff_dt
-      super.to_date
-    end
+    ##################################
 
-    alias_method :eff_date, :eff_dt
+    ########## typecasting ##########
 
     def term_dt
       super.to_date
     end
 
-    # LOB 240 should have only ACA plans
-    def is_aca_compliance_plan?
-      true
+    def eff_dt
+      super.to_date
     end
+
+    #################################
 
     dataset_module do
       def record(params={})
