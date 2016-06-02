@@ -16,22 +16,6 @@ module DST
 
     def_column_alias :id, :mem_no
 
-    ########## Typecasting ##########
-
-    def beg_cov
-      super.to_date
-    end
-
-    def birth
-      super.to_date
-    end
-
-    def mem_reg_eff
-      super.to_date
-    end
-
-    #################################
-
     def disenroll_records_on(date, include_cancel)
       ds = disenroll_records_dataset.on(date)
       ds = ds.exclude_cancel_records unless include_cancel
@@ -45,9 +29,9 @@ module DST
         NullRecord.new
       else
         if group.is_exchange?
-          lob_240_benefit_plan_history_dataset.where('eff_dt <= ?', date).reverse(:eff_dt).first
+          lob_240_benefit_plan_history_dataset.record!(on: date)
         else
-          group.benefit_plans_dataset.where('eff_dates <= ?', date).reverse(:eff_dates).first
+          group.benefit_plan(:on => date)
         end
       end
     end
@@ -68,3 +52,4 @@ module DST
   end
 end
 
+require_relative 'member/typecasting'
