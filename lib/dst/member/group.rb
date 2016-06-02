@@ -15,7 +15,7 @@ module MemberClass
 
     def group(params={})
       date = params.fetch(:on) { raise KeyError, 'Missing :on => [date]' }
-      return NullRecord.new unless is_eligible_on?(date)
+      return DST::NullRecord.new unless is_eligible_on?(date)
       DST::Group.where(:group_id => group_id(on: date)).first
     end
   end

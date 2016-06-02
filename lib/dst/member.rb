@@ -30,7 +30,7 @@ module DST
       group = group(on: date)
       case
       when group.nil?
-        NullRecord.new
+        DST::NullRecord.new
       when group.is_exchange?
         lob_240_benefit_plan_history_dataset.record!(on: date)
       else

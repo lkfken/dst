@@ -1,11 +1,13 @@
-class NullRecord
+module DST
+  class NullRecord
 
-  def nil?
-    true
+    def nil?
+      true
+    end
+
+    def method_missing(*args, &block)
+      self
+    end
+
   end
-
-  def method_missing(*args, &block)
-    self
-  end
-
 end
