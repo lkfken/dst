@@ -3,9 +3,9 @@ require_relative 'member/group'
 
 module DST
   class Member < ::Sequel::Model(::SequelConnect::DB)
-    include DST
     include MemberClass::CheckPoint
     include MemberClass::Group
+
     set_dataset :members_base_view
     set_primary_key :mem_no
 
@@ -58,8 +58,8 @@ module DST
     end
 
     dataset_module do
-      subset :commercial, :mem_lob => COMMERCIAL_LOBS
-      subset :exchange, :mem_lob => EXCHANGE_LOBS
+      subset :commercial, :mem_lob => DST.commercial_lobs
+      subset :exchange, :mem_lob => DST.exchange_lobs
 
       def active
         where(Sequel.&(Sequel.~(:disenr => 'D'), Sequel.~(:mem_lob => '')))

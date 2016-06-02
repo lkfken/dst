@@ -1,6 +1,5 @@
 module DST
   class Group < ::Sequel::Model(::SequelConnect::DB)
-    include DST
     set_dataset :cchp_groups_base
     set_primary_key :group_id
 
@@ -10,7 +9,7 @@ module DST
     def_column_alias :id, :group_id
 
     def is_exchange?
-      EXCHANGE_LOBS.include?(lob)
+      DST.exchange_lobs.include?(lob)
     end
   end
 end
