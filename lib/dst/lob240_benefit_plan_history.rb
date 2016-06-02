@@ -21,5 +21,15 @@ module DST
       true
     end
 
+    dataset_module do
+      def record(params={})
+        date = params.fetch(:on) { raise KeyError, 'Missing :on => [date]' }
+        where('eff_dt <= ?', date).reverse(:eff_dt)
+      end
+
+      def record!(params={})
+        record(params).first
+      end
+    end
   end
 end
