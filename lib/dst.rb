@@ -20,6 +20,7 @@ module DST
   end
 end
 
+require_relative 'dst/benefit_plan'
 require_relative 'dst/disenroll_record'
 require_relative 'dst/group'
 require_relative 'dst/lob240_benefit_plan_history'
