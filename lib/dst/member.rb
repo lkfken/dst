@@ -46,6 +46,7 @@ module DST
     dataset_module do
       subset :commercial, :mem_lob => DST.commercial_lobs
       subset :exchange, :mem_lob => DST.exchange_lobs
+      subset :hill_pcp, :mem_region => 'HPMG'
 
       def active
         where(Sequel.&(Sequel.~(:disenr => 'D'), Sequel.~(:mem_lob => '')))
@@ -55,3 +56,4 @@ module DST
 end
 
 require_relative 'member/typecasting'
+require_relative 'member/commercial'
