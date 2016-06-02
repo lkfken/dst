@@ -2,13 +2,13 @@ module DST
   class BenefitPlan < ::Sequel::Model(::SequelConnect::DB)
     set_dataset :cchp_grp_rid_hist_details_base
 
+    def_column_alias :name, :benefit_plan
+
     ########## associations ##########
 
     many_to_one :group
 
     ##################################
-
-    def_column_alias :name, :benefit_plan
 
     dataset_module do
       def record(params={})

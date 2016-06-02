@@ -1,10 +1,15 @@
 module DST
   class DisenrollRecord < ::Sequel::Model(::SequelConnect::DB)
     set_dataset :disenroll_base_view
+
+    def_column_alias :group_id, :c_grp
+
+    ########## associations ##########
+
     many_to_one :member
     many_to_one :group
 
-    def_column_alias :group_id, :c_grp
+    ##################################
 
     dataset_module do
       def exclude_cancel_records

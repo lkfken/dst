@@ -9,12 +9,15 @@ module DST
     set_dataset :members_base_view
     set_primary_key :mem_no
 
-    many_to_one :pcp, :class => :'DST::Physician', :key => [:physician, :mem_lob], :primary_key => [:provider_id, :lob]
+    def_column_alias :id, :mem_no
 
+    ########## associations ##########
+
+    many_to_one :pcp, :class => :'DST::Physician', :key => [:physician, :mem_lob], :primary_key => [:provider_id, :lob]
     one_to_many :lob_240_benefit_plan_history, :key => :mem_id, :order => :eff_dt
     one_to_many :disenroll_records, :key => :mem_id
 
-    def_column_alias :id, :mem_no
+    ##################################
 
     def disenroll_records_on(date, include_cancel)
       ds = disenroll_records_dataset.on(date)
@@ -23,16 +26,15 @@ module DST
     end
 
     def benefit_plan(params={})
-      date  = params.fetch(:on)
-      group = group(params)
-      if group.nil?
+      date  = params.fetch(:on) { raise KeyError, 'Missing :on => [date]' }
+      group = group(on: date)
+      case
+      when group.nil?
         NullRecord.new
+      when group.is_exchange?
+        lob_240_benefit_plan_history_dataset.record!(on: date)
       else
-        if group.is_exchange?
-          lob_240_benefit_plan_history_dataset.record!(on: date)
-        else
-          group.benefit_plan(:on => date)
-        end
+        group.benefit_plan(:on => date)
       end
     end
 
