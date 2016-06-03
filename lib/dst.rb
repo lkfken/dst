@@ -1,8 +1,10 @@
 require 'dotenv'
 Dotenv.load!
-require 'bundler'
-Bundler.require
+require 'bundler/setup'
+require 'sequel'
+require 'sequel_connect'
 
+require_relative 'dst/version'
 require_relative 'dst/null_record'
 
 module DST
