@@ -7,7 +7,7 @@ module DST
 
     ########## associations ##########
 
-    many_to_one :physician, :class => :'MhcModels::Physician',
+    many_to_one :physician, :class => :'DST::Physician',
                 :key               => [:provider, :lob], :primary_key => [:provider_id, :lob]
 
     ##################################
