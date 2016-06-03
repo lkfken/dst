@@ -3,6 +3,7 @@ module DST
     set_dataset :disenroll_base_view
 
     def_column_alias :group_id, :c_grp
+    def_column_alias :member_id, :mem_id
 
     ########## associations ##########
 
