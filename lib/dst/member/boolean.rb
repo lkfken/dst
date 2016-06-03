@@ -1,6 +1,6 @@
 module DST
-  module MemberClass
-    module CheckPoint
+  module MemberInstanceMethods
+    module Boolean
       def is_active?
         !is_disenrolled?
       end

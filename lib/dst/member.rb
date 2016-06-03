@@ -1,10 +1,10 @@
-require_relative 'member/check_point'
+require_relative 'member/boolean'
 require_relative 'member/group'
 
 module DST
   class Member < ::Sequel::Model(::SequelConnect::DB)
-    include DST::MemberClass::CheckPoint
-    include DST::MemberClass::Group
+    include DST::MemberInstanceMethods::Boolean
+    include DST::MemberInstanceMethods::Group
 
     set_dataset :members_base_view
     set_primary_key :mem_no

@@ -1,5 +1,5 @@
 module DST
-  module MemberClass
+  module MemberInstanceMethods
     module Group
       def group_ids(params={})
         date           = params.fetch(:on)
