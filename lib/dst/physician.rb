@@ -1,7 +1,6 @@
 require_relative 'physician/medical_group'
 module DST
   class Physician < ::Sequel::Model(::SequelConnect::DB)
-
     set_dataset :physician_base_view
     set_primary_key [:provider_id, :lob]
 
