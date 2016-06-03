@@ -55,5 +55,5 @@ module DST
   end
 end
 
-require_relative 'member/typecasting'
+require_relative 'member/ext/typecasting'
 require_relative 'member/commercial'
