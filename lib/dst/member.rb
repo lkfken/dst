@@ -3,8 +3,8 @@ require_relative 'member/group'
 
 module DST
   class Member < ::Sequel::Model(::SequelConnect::DB)
-    include MemberClass::CheckPoint
-    include MemberClass::Group
+    include DST::MemberClass::CheckPoint
+    include DST::MemberClass::Group
 
     set_dataset :members_base_view
     set_primary_key :mem_no
