@@ -10,6 +10,7 @@ module DST
     set_primary_key :mem_no
 
     def_column_alias :id, :mem_no
+    def_column_alias :group_id, :group_num
 
     ########## associations ##########
 
