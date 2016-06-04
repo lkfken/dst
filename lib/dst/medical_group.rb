@@ -11,6 +11,18 @@ module DST
                 :key               => [:provider, :lob], :primary_key => [:provider_id, :lob]
 
     ##################################
+    def value
+      if %w[SM SF].include?(region)
+        case prov_capacity
+        when 'FPCP'
+          'SM'
+        when 'PPCP'
+          'SF'
+        end
+      else
+        region
+      end
+    end
 
     dataset_module do
 
@@ -34,7 +46,7 @@ module DST
 
       def eligible(params={})
         date = params.fetch(:on)
-        span(:end_date => date).active
+        span(:end_date => date)
       end
 
       def hpmg
@@ -44,6 +56,7 @@ module DST
       def regions!
         select_group(:region).map(:region)
       end
+
     end
   end
 end
