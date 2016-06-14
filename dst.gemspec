@@ -2,6 +2,7 @@
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'dst/version'
+require 'rbconfig'
 
 Gem::Specification.new do |gem|
   gem.name          = 'dst'
@@ -30,8 +31,10 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rspec'
   gem.add_development_dependency 'rake'
   gem.add_development_dependency 'dotenv'
-  gem.add_development_dependency 'jdbc-jtds'
+  gem.add_development_dependency 'jdbc-jtds' if RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'jruby'
+  gem.add_development_dependency 'tiny_tds' if RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'ruby'
   gem.add_development_dependency 'dataset_exporter'
+  gem.add_development_dependency 'awesome_print'
 
   gem.require_paths = ['lib']
 
