@@ -1,4 +1,5 @@
 source 'https://rubygems.org'
+gem 'sequel_connect', :github => 'lkfken/sequel_connect'
 gemspec
 
 # source 'https://rubygems.org' do
