@@ -14,6 +14,10 @@ module DST
         records = disenroll_records_dataset.exclude_cancel_records.on(date)
         !records.count.zero?
       end
+
+      def is_subscriber?
+        rel_code == 'P'
+      end
     end
   end
 end
