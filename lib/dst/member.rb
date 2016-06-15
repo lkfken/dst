@@ -1,10 +1,12 @@
 require_relative 'member/boolean'
 require_relative 'member/group'
+require_relative 'member/lob'
 
 module DST
-  class Member < ::Sequel::Model(::SequelConnect::DB)
+  class Member < ::Sequel::Model(::DST::DB)
     include DST::MemberInstanceMethods::Boolean
     include DST::MemberInstanceMethods::Group
+    include DST::MemberInstanceMethods::LOB
 
     set_dataset :members_base_view
     set_primary_key :mem_no
@@ -16,6 +18,7 @@ module DST
     many_to_one :pcp, :class => :'DST::Physician', :key => [:physician, :mem_lob], :primary_key => [:provider_id, :lob]
     one_to_many :lob_240_benefit_plan_history, :key => :mem_id, :order => :eff_dt
     one_to_many :disenroll_records, :key => :mem_id
+    one_to_many :medicare_events, :key => :memb_id
 
     ##################################
 
@@ -51,6 +54,12 @@ module DST
       def active
         where(Sequel.&(Sequel.~(:disenr => 'D'), Sequel.~(:mem_lob => '')))
       end
+
+      def eligible_on(date)
+        left_join(DST::DisenrollRecord.exclude_cancel_records.where('begin_cov <= ? and disenr_dt >= ?', date, date).select(:mem_id, :begin_cov), :mem_id => :mem_no)
+            .where { ((beg_cov <= date) & (beg_cov > Date.civil(1900, 1, 1))) | (begin_cov <= date) }
+      end
+
     end
   end
 end

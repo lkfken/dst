@@ -8,6 +8,7 @@ require_relative 'dst/version'
 require_relative 'dst/null_record'
 
 module DST
+  DB = SequelConnect::DB
   extend self
   def commercial_lobs
     %w[100 110 130 200 220 230]
@@ -26,6 +27,11 @@ require_relative 'dst/benefit_plan'
 require_relative 'dst/disenroll_record'
 require_relative 'dst/group'
 require_relative 'dst/lob240_benefit_plan_history'
+require_relative 'dst/lob240_edi_enrollment'
+require_relative 'dst/lob240_edi_reporting_category'
+require_relative 'dst/lob240_edi_benefit'
 require_relative 'dst/member'
 require_relative 'dst/physician'
 require_relative 'dst/medical_group'
+require_relative 'dst/medicare_event'
+require_relative 'dst/enrollment_record'

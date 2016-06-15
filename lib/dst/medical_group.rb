@@ -1,5 +1,5 @@
 module DST
-  class MedicalGroup < ::Sequel::Model(::SequelConnect::DB)
+  class MedicalGroup < ::Sequel::Model(DST::DB)
     VALID_PCP_CAPACITY_CODE = %w[PPCP FPCP]
 
     set_dataset :prov_region_base_view

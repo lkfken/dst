@@ -1,5 +1,5 @@
 module DST
-  class BenefitPlan < ::Sequel::Model(::SequelConnect::DB)
+  class BenefitPlan < ::Sequel::Model(DST::DB)
     set_dataset :cchp_grp_rid_hist_details_base
 
     def_column_alias :name, :benefit_plan

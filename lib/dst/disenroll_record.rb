@@ -1,5 +1,5 @@
 module DST
-  class DisenrollRecord < ::Sequel::Model(::SequelConnect::DB)
+  class DisenrollRecord < ::Sequel::Model(DST::DB)
     set_dataset :disenroll_base_view
 
     def_column_alias :group_id, :c_grp

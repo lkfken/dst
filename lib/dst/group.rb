@@ -1,5 +1,5 @@
 module DST
-  class Group < ::Sequel::Model(::SequelConnect::DB)
+  class Group < ::Sequel::Model(DST::DB)
     set_dataset :cchp_groups_base
     set_primary_key :group_id
 
