@@ -19,7 +19,7 @@ module DST
     one_to_many :lob_240_benefit_plan_history, :key => :mem_id, :order => :eff_dt
     one_to_many :disenroll_records, :key => :mem_id
     one_to_many :medicare_events, :key => :memb_id
-
+    many_to_one :subscriber
     ##################################
 
     def disenroll_records_on(date, include_cancel)
@@ -53,6 +53,10 @@ module DST
 
       def active
         where(Sequel.&(Sequel.~(:disenr => 'D'), Sequel.~(:mem_lob => '')))
+      end
+
+      def subscriber_only
+        where(:rel_code => 'P')
       end
 
       def eligible_on(date)
