@@ -4,6 +4,8 @@ module DST
 
     def_column_alias :group_id, :c_grp
     def_column_alias :member_id, :mem_id
+    def_column_alias :effective_date, :begin_cov
+    def_column_alias :disenroll_date, :disenr_dt
 
     ########## associations ##########
 
