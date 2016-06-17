@@ -4,11 +4,11 @@ module DST
     set_dataset :edi_benefits
 
     def benefitbegin
-      Date.parse(super) unless super.nil?
+      Date.strptime(super, '%m/%d/%Y') unless super.nil?
     end
 
     def benefitend
-      Date.parse(super) unless super.nil?
+      Date.strptime(super, '%m/%d/%Y') unless super.nil?
     end
   end
 end
