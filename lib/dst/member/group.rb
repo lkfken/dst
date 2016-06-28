@@ -7,6 +7,7 @@ module DST
 
         ids = disenroll_records_on(date, include_cancel).map(&:group_id)
         ids << group_num if is_active? && date >= beg_cov
+        ids
       end
 
       def group_id(params={})
