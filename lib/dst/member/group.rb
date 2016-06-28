@@ -4,11 +4,9 @@ module DST
       def group_ids(params={})
         date           = params.fetch(:on)
         include_cancel = params.fetch(:include_cancel, true)
-        if is_active? && date >= beg_cov
-          [group_num]
-        else
-          disenroll_records_on(date, include_cancel).map(&:group_id)
-        end
+
+        ids = disenroll_records_on(date, include_cancel).map(&:group_id)
+        ids << group_num if is_active? && date >= beg_cov
       end
 
       def group_id(params={})
