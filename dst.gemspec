@@ -27,10 +27,10 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
 
   gem.add_dependency 'sequel_connect'
+  gem.add_dependency 'dotenv'
   gem.add_development_dependency 'bundler'
   gem.add_development_dependency 'rspec'
   gem.add_development_dependency 'rake'
-  gem.add_development_dependency 'dotenv'
   gem.add_development_dependency 'jdbc-jtds' if RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'jruby'
   gem.add_development_dependency 'tiny_tds' if RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'ruby'
   gem.add_development_dependency 'dataset_exporter'

@@ -11,6 +11,15 @@ module DST
     ##################################
 
     dataset_module do
+      def current_benefit_plans
+        benefit_plans = DST::BenefitPlan
+                            .select_group(:group_id)
+                            .select_append { max(:eff_dates).as(:max_eff_dates) }
+
+        from_self(:alias => :self).join(benefit_plans, { :max_eff_dates => :eff_dates, :group_id => :self__group_id })
+            .select_all(:self)
+      end
+
       def record(params={})
         date = params.fetch(:on) { raise KeyError, 'Missing :on => [date]' }
         where('eff_dates <= ?', date).reverse(:eff_dates)

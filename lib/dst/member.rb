@@ -1,25 +1,42 @@
 require_relative 'member/boolean'
 require_relative 'member/group'
 require_relative 'member/lob'
+require_relative 'member/rx_data'
+
+# require_relative 'enrollment_record' unless defined?(DST::EnrollmentRecord)
 
 module DST
   class Member < ::Sequel::Model(::DST::DB)
+    class NoPreviousPCP < StandardError
+    end
     include DST::MemberInstanceMethods::Boolean
     include DST::MemberInstanceMethods::Group
     include DST::MemberInstanceMethods::LOB
+    include DST::MemberInstanceMethods::RxData
 
     set_dataset :members_base_view
     set_primary_key :mem_no
 
     def_column_alias :id, :mem_no
+    def_column_alias :language, :primary_lang
+
+    attr_reader :pcp_name
 
     ########## associations ##########
 
     many_to_one :pcp, :class => :'DST::Physician', :key => [:physician, :mem_lob], :primary_key => [:provider_id, :lob]
-    one_to_many :lob_240_benefit_plan_history, :key => :mem_id, :order => :eff_dt
-    one_to_many :disenroll_records, :key => :mem_id
-    one_to_many :medicare_events, :key => :memb_id
     many_to_one :subscriber
+
+    one_to_many :lob_240_benefit_plan_history, :key => :mem_id, :order => :eff_dt
+    one_to_many :disenroll_records, :key => :mem_id #, :order => :begin_cov
+    one_to_many :enrollment_records, :key => :mem_id
+    one_to_many :medicare_events, :key => :memb_id, :order => :seq_num
+    one_to_many :medical_group_events, :key => :mem_id
+    one_to_many :other_insurances, :key => :mem_id
+
+    one_to_one :last_disenroll_record, :clone => :disenroll_records do |ds|
+      ds.last_disenroll_records
+    end
     ##################################
 
     def disenroll_records_on(date, include_cancel)
@@ -46,13 +63,81 @@ module DST
       now.year - birth.year - ((now.month > birth.month || (now.month == birth.month && now.day >= birth.day)) ? 0 : 1)
     end
 
+    def phones
+      if other_phone.empty?
+        a = []
+        a << subscriber.home_phone.strip
+        a << subscriber.work_phone.strip
+        a.uniq.delete_if { |ph| ph.empty? }
+      else
+        other_phone
+      end
+    end
+
+    def address
+      { :line_1 => other_addr1.strip,
+        :line_2 => other_addr2.strip,
+        :line_3 => other_addr3.strip,
+        :city   => other_city,
+        :state  => other_state,
+        :zip    => other_zip }
+    end
+
+    def residential_address
+      member_address_exist? ? address : subscriber.address
+    end
+
+    def residential_zipcode
+      residential_address.fetch(:zip)
+    end
+
+    def mailing_address_block
+      subscriber.address_block
+    end
+
+    def member_address_exist?
+      !other_addr1.empty?
+    end
+
+    def last_name
+      super.strip
+    end
+
+    def first_name
+      super.strip
+    end
+
+    def full_name
+      [first_name, last_name].delete_if { |n| n.empty? }.join(' ')
+    end
+
+    def previous_pcp
+      doctor = enrollment_records_dataset.exclude(:pcp_id => ['999998', '999999', ' '])
+                   .reverse(:elig_eff_dt).select_group(:elig_eff_dt, :pcp_id).first
+      raise NoPreviousPCP, "#{id} has no previous PCP." if doctor.nil?
+      doctor.pcp_id
+    end
+
+    def family_dataset
+      self.class.where(:subscriber_id => subscriber_id)
+    end
+
+    def family
+      family_dataset.all
+    end
+
     dataset_module do
       subset :commercial, :mem_lob => DST.commercial_lobs
       subset :exchange, :mem_lob => DST.exchange_lobs
       subset :hill_pcp, :mem_region => 'HPMG'
+      subset :pcp_assigned, Sequel.~(:physician => ['999999', '999998', ''])
 
       def active
         where(Sequel.&(Sequel.~(:disenr => 'D'), Sequel.~(:mem_lob => '')))
+      end
+
+      def not_active
+        where(:disenr => 'D').or(:mem_lob => '')
       end
 
       def subscriber_only
@@ -60,8 +145,24 @@ module DST
       end
 
       def eligible_on(date)
-        left_join(DST::DisenrollRecord.exclude_cancel_records.where('begin_cov <= ? and disenr_dt >= ?', date, date).select(:mem_id, :begin_cov), :mem_id => :mem_no)
+        disenroll_record_ds = DST::DisenrollRecord.exclude_cancel_records.where('begin_cov <= ? and disenr_dt >= ?',
+                                                                                date, date).select(:mem_id, :begin_cov)
+        from_self(alias: :m).left_join(disenroll_record_ds, :mem_id => :mem_no)
             .where { ((beg_cov <= date) & (beg_cov > Date.civil(1900, 1, 1))) | (begin_cov <= date) }
+            .select_all(:m).from_self!
+      end
+
+      def medical_group_ds
+        mod_region_to_mg = Sequel.case([[{ mem_region: 'SM' }, 'CCHCA'],
+                                        [{ mem_region: 'SF' }, 'CCHCA']], :mem_region).as(:medical_group)
+        select_all.select_more { mod_region_to_mg }.from_self!
+      end
+
+      def lob_filter(params={})
+        date = params.fetch(:on)
+        lobs = params.fetch(:value)
+        ds = DST::EnrollmentRecord.eligible_on(:year => date.year, :month => date.month).where(:orig_lob_id => lobs).select_group(:mem_id)
+        join(ds, :mem_id => :mem_no).select_all.from_self!
       end
 
     end
@@ -70,3 +171,4 @@ end
 
 require_relative 'member/ext/typecasting'
 require_relative 'member/subset/commercial'
+require_relative 'member/subset/LisSenior'

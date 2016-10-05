@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 gem 'sequel_connect', :github => 'lkfken/sequel_connect'
+gem 'jdbc-sqlite3'
 gemspec
 
 # source 'https://rubygems.org' do
