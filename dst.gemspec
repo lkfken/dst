@@ -26,7 +26,7 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.add_dependency 'sequel_connect'
+  gem.add_dependency 'sequel_connect', '>=0.1.2'
   gem.add_dependency 'dotenv'
   gem.add_development_dependency 'bundler'
   gem.add_development_dependency 'rspec'
