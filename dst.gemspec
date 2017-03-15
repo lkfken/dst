@@ -26,15 +26,18 @@ Gem::Specification.new do |gem|
   gem.executables   = gem.files.grep(%r{^exe/}) { |f| File.basename(f) }
   gem.require_paths = ["lib"]
 
-  gem.add_dependency 'sequel_connect', '>=0.1.2'
   gem.add_dependency 'dotenv'
+  gem.add_dependency 'sequel', '>= 4.44.0'
+  # gem.add_development_dependency 'sequel_connect'
   gem.add_development_dependency 'bundler'
   gem.add_development_dependency 'rspec'
   gem.add_development_dependency 'rake'
+  gem.add_development_dependency 'eed_db'
   gem.add_development_dependency 'jdbc-jtds' if RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'jruby'
   gem.add_development_dependency 'tiny_tds' if RbConfig::CONFIG['RUBY_INSTALL_NAME'] == 'ruby'
-  gem.add_development_dependency 'dataset_exporter'
+  # gem.add_development_dependency 'dataset_exporter'
   gem.add_development_dependency 'awesome_print'
+  gem.add_development_dependency 'terminal-table'
 
   gem.require_paths = ['lib']
 

@@ -26,6 +26,7 @@ module DST
 
     many_to_one :pcp, :class => :'DST::Physician', :key => [:physician, :mem_lob], :primary_key => [:provider_id, :lob]
     many_to_one :subscriber
+    many_to_one :current_group, :class => :'DST::Group', :key => :group_num
 
     one_to_many :lob_240_benefit_plan_history, :key => :mem_id, :order => :eff_dt
     one_to_many :disenroll_records, :key => :mem_id #, :order => :begin_cov
@@ -49,10 +50,11 @@ module DST
       date  = params.fetch(:on) { raise KeyError, 'Missing :on => [date]' }
       group = group(on: date)
       case
+      when group.is_exchange?
+        plan = lob_240_benefit_plan_history_dataset.record!(on: date)
+        plan.nil? ? DST::NullRecord.new : plan
       when group.nil?
         DST::NullRecord.new
-      when group.is_exchange?
-        lob_240_benefit_plan_history_dataset.record!(on: date)
       else
         group.benefit_plan(:on => date)
       end
@@ -61,6 +63,10 @@ module DST
     def age(params={})
       now = params.fetch(:on, Time.now.utc.to_date)
       now.year - birth.year - ((now.month > birth.month || (now.month == birth.month && now.day >= birth.day)) ? 0 : 1)
+    end
+
+    def disenroll_date
+      is_active? ? Date.civil(2999, 12, 31) : disenroll_records_dataset.last_disenroll_records.first.disenr_dt
     end
 
     def phones
@@ -89,6 +95,14 @@ module DST
 
     def residential_zipcode
       residential_address.fetch(:zip)
+    end
+
+    def residential_city
+      residential_address.fetch(:city)
+    end
+
+    def residential_state
+      residential_address.fetch(:state)
     end
 
     def mailing_address_block
@@ -132,6 +146,13 @@ module DST
       subset :hill_pcp, :mem_region => 'HPMG'
       subset :pcp_assigned, Sequel.~(:physician => ['999999', '999998', ''])
 
+      eager :with_current_group, :current_group
+
+      def append_disenroll_date
+        disenroll_date = Sequel.function(:todatetimeoffset, '2999-12-31 00:00:00', '-08:00').cast(:datetime)
+        select_append(disenroll_date.as(:disenroll_date))
+      end
+
       def active
         where(Sequel.&(Sequel.~(:disenr => 'D'), Sequel.~(:mem_lob => '')))
       end
@@ -161,10 +182,16 @@ module DST
       def lob_filter(params={})
         date = params.fetch(:on)
         lobs = params.fetch(:value)
-        ds = DST::EnrollmentRecord.eligible_on(:year => date.year, :month => date.month).where(:orig_lob_id => lobs).select_group(:mem_id)
+        ds   = DST::EnrollmentRecord.eligible_on(:year => date.year, :month => date.month).where(:orig_lob_id => lobs).select_group(:mem_id)
         join(ds, :mem_id => :mem_no).select_all.from_self!
       end
 
+      def not_under_age(n, params={})
+        on_date     = params.fetch(:on_date, Date.today)
+        cutoff_date = on_date.prev_year(n)
+        #warn "Age >= #{n} on #{on_date}.  DOB must be on or before #{cutoff_date}."
+        where('birth <= ?', cutoff_date)
+      end
     end
   end
 end

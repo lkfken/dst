@@ -29,10 +29,11 @@ module DST
     end
 
     def address_block
-      line1   = address[:line_1]
-      line2   = [address[:line_2], address[:line_3]].delete_if { |s| s.empty? }.compact.join(', ')
-      line3   = "#{address[:city]}, #{address[:state]} #{address[:zip]}"
+      line1 = address[:line_1]
+      line2 = [address[:line_2], address[:line_3]].delete_if { |s| s.empty? }.compact.join(', ')
+      line3 = "#{address[:city]}, #{address[:state]} #{address[:zip]}"
       [line1, line2, line3].delete_if { |s| s.empty? }.compact.join("\n")
     end
+
   end
 end

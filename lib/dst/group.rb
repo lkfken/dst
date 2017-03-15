@@ -30,10 +30,25 @@ module DST
     end
 
     dataset_module do
+      def active
+        group_id = association_join(:members).select_group(:group_id).exclude(:group_id => '')
+        where(:group_id => group_id)
+      end
+
+      def not_active
+        exclude(:group_id => active.select(:group_id))
+      end
       def renewal_month(*months)
         # months = args.map{|m|Date.civil(1900,m.to_i,1).strftime('%b').upcase}
         # where(:open_month => months)
         where('month(cov_day) in ?', months)
+      end
+
+      def append_parent_gid
+        g_groups   = Sequel.&(Sequel.function(:left, :group_id, 1) => 'G', :lob => %w[100 110])
+        s_groups   = Sequel.&(Sequel.function(:left, :group_id, 1) => 'S', :lob => %w[100 110])
+        parent_gid = Sequel.case([[g_groups, Sequel.function(:left, :group_id, 4)], [s_groups, Sequel.function(:left, :group_id, 5)]], :group_id)
+        select_append(parent_gid.as(:parent_gid)).from_self
       end
     end
   end

@@ -3,6 +3,7 @@ module DST
     set_dataset :mr_members_base_view
 
     def_column_alias :member_id, :memb_id
+    def_column_alias :hicn, :hic_no
 
     ########## associations ##########
 
@@ -14,14 +15,14 @@ module DST
         where('li_cpy_dt <= ?', date)
             .select_group(:memb_id___lisc_member_id)
             .select_append { max(:li_cpy_dt).as(:max_li_cpy_dt) }
-            # .where('li_cpy_dt > ? and li_cpy_dt <= ?', Date.civil(1970, 1, 1), date)
+        # .where('li_cpy_dt > ? and li_cpy_dt <= ?', Date.civil(1970, 1, 1), date)
       end
 
       def current_lisl_date(date: Date.today)
         where('li_sub_dt <= ?', date)
             .select_group(:memb_id___lisl_member_id)
             .select_append { max(:li_sub_dt).as(:max_li_sub_dt) }
-            # .where('li_sub_dt > ? and li_sub_dt <= ?', Date.civil(1970, 1, 1), date)
+        # .where('li_sub_dt > ? and li_sub_dt <= ?', Date.civil(1970, 1, 1), date)
       end
 
       def current_lis_seq_num(date: Date.today)

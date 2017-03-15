@@ -10,13 +10,19 @@ module DST
 
     ########## associations ##########
 
-    many_to_one :member
-    many_to_one :group
+    many_to_one :member, :key => :mem_id
+    many_to_one :group, :key => :c_grp
     many_to_one :reason, :class => :'DST::DisenrollReason', :key => :dis_reas
 
     ##################################
 
+    def disenr_dt
+      super.to_date
+    end
+
     dataset_module do
+      eager :with_group, :group
+
       def exclude_cancel_records
         exclude(:begin_cov => :disenr_dt)
       end
@@ -28,7 +34,7 @@ module DST
                                 .select_append { max(:disenr_dt).as(:max_disenr_dt) }
 
         from_self(:alias => :self).join(disenroll_records, :max_disenr_dt => :disenr_dt, :member_id => :mem_id)
-                                       .select_all(:self)
+            .select_all(:self)
       end
 
       # this one include cancel records.  Should considering using #eligibility_record_on instead

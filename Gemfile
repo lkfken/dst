@@ -1,6 +1,13 @@
-source 'https://rubygems.org'
-gem 'sequel_connect', :github => 'lkfken/sequel_connect'
-gem 'jdbc-sqlite3'
+source 'https://rubygems.org' do
+  gem 'jdbc-sqlite3'
+end
+
+source 'http://cchpeedwebapp/geminabox' do
+  gem 'dataset_exporter', :groups => [:test, :development]
+end
+
+gem 'sequel_connect', :git => 'https://github.com/lkfken/sequel_connect.git'
+
 gemspec
 
 # source 'https://rubygems.org' do
@@ -11,8 +18,4 @@ gemspec
 #   gem 'rspec', :group => :development
 # end
 #
-# source 'http://testeed/geminabox' do
-#   gem 'dataset_exporter', :group => :test
-# end
 #
-# gem 'sequel_connect', :github => 'lkfken/sequel_connect'
