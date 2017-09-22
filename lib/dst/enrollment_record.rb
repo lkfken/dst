@@ -40,7 +40,8 @@ module DST
         date        = Date.civil(year, month, day)
         cutoff_date = Date.parse(Date.today.next_month.strftime("%Y%m01"))
         raise [".#{caller_locations(0).first.label}", DST::EnrollmentRecord.table_name, "is not ready until #{cutoff_date.strftime('%m/%d/%Y')}!!"].join(' ') if date >= cutoff_date
-        exclude_cancel_records.where('elig_eff_dt < ? and elig_exp_dt >= ?', date.next_month, date)
+        lit = Sequel.lit('ELIG_EFF_DT < ? and ELIG_EXP_DT >= ?', date.next_month, date)
+        exclude_cancel_records.where(lit)
       end
 
       def islands(id)
@@ -49,7 +50,7 @@ module DST
         when gaps.empty?
           min_elig_eff_dt = DST::EnrollmentRecord.where(:mem_id => id).min(:elig_eff_dt)
           max_elig_exp_dt = DST::EnrollmentRecord.where(:mem_id => id).max(:elig_exp_dt)
-          { :mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }
+          [{ :mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }]
         else
           gaps.flat_map do |gap|
             ds              = DST::EnrollmentRecord.where(:mem_id => gap[:mem_id]).where('elig_exp_dt < ?', gap[:gap_begin])
