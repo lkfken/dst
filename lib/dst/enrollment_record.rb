@@ -40,7 +40,7 @@ module DST
         date        = Date.civil(year, month, day)
         cutoff_date = Date.parse(Date.today.next_month.strftime("%Y%m01"))
         raise [".#{caller_locations(0).first.label}", DST::EnrollmentRecord.table_name, "is not ready until #{cutoff_date.strftime('%m/%d/%Y')}!!"].join(' ') if date >= cutoff_date
-        lit = Sequel.lit('ELIG_EFF_DT < ? and ELIG_EXP_DT >= ?', date, date)
+        lit = Sequel.lit('ELIG_EFF_DT <= ? and ELIG_EXP_DT >= ?', date, date)
         exclude_cancel_records.where(lit)
       end
 
