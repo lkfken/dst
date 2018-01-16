@@ -18,9 +18,9 @@ module DST
           effective_date.year <= 2014 ? 'CPM' : 'CPMSP2530'
         when '250', '256'
           effective_date.year <= 2014 ? 'CPM' : 'CPMSP2500'
-        when '100', '110'
+        when *DST::commercial_lobs
           'CPC'
-        when '140', '240'
+        when *DST::exchange_lobs
           'CCX'
         else
           raise "Unknown RX Group for LOB #{lob}"

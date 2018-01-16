@@ -1,5 +1,6 @@
 module DST
   class Lob240BenefitPlanHistory < ::Sequel::Model(DST::DB)
+
     set_dataset :kt_him_cur_ben_plan_hist
 
     def_column_alias :name, :cur_ben_plan

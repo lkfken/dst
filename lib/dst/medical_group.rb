@@ -28,7 +28,7 @@ module DST
 
       def span(params={})
         end_date = params.fetch(:end_date, Date.civil(2999, 12, 31))
-        ds       = where('prov_reg_eff_dt <= ?', end_date)
+        ds       = where(Sequel.lit('prov_reg_eff_dt <= ?', end_date))
         return ds if ds.empty?
 
         start_date    = params.fetch(:start_date, Date.civil(1900, 1, 1))
@@ -43,7 +43,7 @@ module DST
                                                   .select_append { max(:prov_reg_eff_dt).as(:prov_region_eff_dt) },
                                               :provider_id => :provider, :provider_region => :region) do |j, lj, js|
           Sequel.expr(Sequel.qualify(j, :prov_region_eff_dt) => Sequel.qualify(lj, :prov_reg_eff_dt))
-        end.select_all(:self).from_self!
+        end.select_all(:self).from_self
       end
 
       def active

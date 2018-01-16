@@ -1,4 +1,7 @@
+# coding: utf-8
+
 require 'dotenv'
+require 'yaml'
 
 if File.exist?(gem_env_file = File.join(File.dirname(__FILE__), '..', '.env'))
   Dotenv.load!(gem_env_file)
@@ -12,15 +15,37 @@ require 'sequel_connect'
 
 require_relative 'dst/version'
 require_relative 'dst/null_record'
-
+require_relative 'pims'
 module DST
-  SequelConnect.filename = File.join(File.dirname(__FILE__), '..', 'config', 'database.yml')
-  DB                     = SequelConnect.DB
+  class Config
+    class << self
+      include SequelConnect
 
+      def filename
+        File.join(File.dirname(__FILE__), '..', 'config', 'database.yml')
+      end
+
+      def stage
+        'production'
+      end
+
+    end
+  end
+  DB                                = DST::Config.DB
+  Sequel::Model.require_valid_table = false
+  Sequel.split_symbols              = true
+  DB.extension :auto_literal_strings
+  SCHEMA = Sequel.qualify(:dst, :dbo)
+  # a convenient way to make instance methods into class methods
+  # ie: DST.cchp_lobs
   extend self
 
   def cchp_lobs
     commercial_lobs.concat(exchange_lobs).concat(medicare_lobs).concat(ppo_lobs)
+  end
+
+  def off_exchange_lobs
+    off_exchange_group_lobs.concat(off_exchange_ifp_lobs)
   end
 
   def off_exchange_ifp_lobs
@@ -31,6 +56,10 @@ module DST
     %w[100 110 130]
   end
 
+  def employer_sponsored_coverage_lobs
+    off_exchange_group_lobs.concat(%w[140])
+  end
+
   def commercial_lobs
     off_exchange_group_lobs.concat(off_exchange_ifp_lobs)
   end
@@ -38,6 +67,8 @@ module DST
   def exchange_lobs
     %w[140 240]
   end
+
+  alias_method :on_exchange_lobs, :exchange_lobs
 
   def medicare_lobs
     %w[250 253 256]

@@ -38,6 +38,7 @@ module DST
       def not_active
         exclude(:group_id => active.select(:group_id))
       end
+
       def renewal_month(*months)
         # months = args.map{|m|Date.civil(1900,m.to_i,1).strftime('%b').upcase}
         # where(:open_month => months)
@@ -45,9 +46,14 @@ module DST
       end
 
       def append_parent_gid
-        g_groups   = Sequel.&(Sequel.function(:left, :group_id, 1) => 'G', :lob => %w[100 110])
-        s_groups   = Sequel.&(Sequel.function(:left, :group_id, 1) => 'S', :lob => %w[100 110])
-        parent_gid = Sequel.case([[g_groups, Sequel.function(:left, :group_id, 4)], [s_groups, Sequel.function(:left, :group_id, 5)]], :group_id)
+        g_groups    = Sequel.&(Sequel.function(:left, :group_id, 1) => 'G', :lob => %w[100 110])
+        s_groups    = Sequel.&(Sequel.function(:left, :group_id, 1) => 'S', :lob => %w[100 110])
+        ccsb_groups = { :lob => %w[140] }
+        parent_gid  = Sequel.case([
+                                      [g_groups, Sequel.function(:left, :group_id, 4)],
+                                      [s_groups, Sequel.function(:left, :group_id, 5)],
+                                      [ccsb_groups, Sequel.function(:left, :group_id, 6)]
+                                  ], :group_id)
         select_append(parent_gid.as(:parent_gid)).from_self
       end
     end

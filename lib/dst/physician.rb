@@ -1,6 +1,6 @@
 module DST
   class Physician < ::Sequel::Model(DST::DB)
-    set_dataset :physician_base_view
+    set_dataset Sequel.qualify(SCHEMA, :physician_base_view)
     set_primary_key [:provider_id, :lob]
 
     def_column_alias :phone, :business_phone

@@ -1,6 +1,7 @@
 require_relative 'member/boolean'
 require_relative 'member/group'
 require_relative 'member/lob'
+require_relative 'member/medical_group'
 require_relative 'member/rx_data'
 
 # require_relative 'enrollment_record' unless defined?(DST::EnrollmentRecord)
@@ -13,14 +14,13 @@ module DST
     include DST::MemberInstanceMethods::Group
     include DST::MemberInstanceMethods::LOB
     include DST::MemberInstanceMethods::RxData
+    include DST::MemberInstanceMethods::MedicalGroup
 
     set_dataset :members_base_view
     set_primary_key :mem_no
 
     def_column_alias :id, :mem_no
     def_column_alias :language, :primary_lang
-
-    attr_reader :pcp_name
 
     ########## associations ##########
 
@@ -105,6 +105,10 @@ module DST
       residential_address.fetch(:state)
     end
 
+    def mailing_address
+      subscriber.address
+    end
+
     def mailing_address_block
       subscriber.address_block
     end
@@ -123,6 +127,10 @@ module DST
 
     def full_name
       [first_name, last_name].delete_if { |n| n.empty? }.join(' ')
+    end
+
+    def no_pcp?
+      %w[999999 999998].include?(physician)
     end
 
     def previous_pcp
@@ -145,8 +153,15 @@ module DST
       subset :exchange, :mem_lob => DST.exchange_lobs
       subset :hill_pcp, :mem_region => 'HPMG'
       subset :pcp_assigned, Sequel.~(:physician => ['999999', '999998', ''])
+      subset :no_pcp_assigned, :physician => ['999999', '999998', '']
 
       eager :with_current_group, :current_group
+
+      def in_groups(*group_ids)
+        like_clauses = group_ids.map { |id| Sequel.like(:group_num, id.upcase + '%') }
+        or_clause    = Sequel.|(*like_clauses)
+        where(or_clause)
+      end
 
       def append_disenroll_date
         disenroll_date = Sequel.function(:todatetimeoffset, '2999-12-31 00:00:00', '-08:00').cast(:datetime)
@@ -166,24 +181,31 @@ module DST
       end
 
       def eligible_on(date)
-        disenroll_record_ds = DST::DisenrollRecord.exclude_cancel_records.where('begin_cov <= ? and disenr_dt >= ?',
-                                                                                date, date).select(:mem_id, :begin_cov)
+        date_ds             = Sequel.lit("begin_cov <= ? and disenr_dt >= ?", date, date)
+        disenroll_record_ds = DST::DisenrollRecord.
+            exclude_cancel_records.
+            where(date_ds).select(:mem_id, :begin_cov)
         from_self(alias: :m).left_join(disenroll_record_ds, :mem_id => :mem_no)
             .where { ((beg_cov <= date) & (beg_cov > Date.civil(1900, 1, 1))) | (begin_cov <= date) }
-            .select_all(:m).from_self!
+            .select_all(:m).from_self
       end
 
       def medical_group_ds
         mod_region_to_mg = Sequel.case([[{ mem_region: 'SM' }, 'CCHCA'],
                                         [{ mem_region: 'SF' }, 'CCHCA']], :mem_region).as(:medical_group)
-        select_all.select_more { mod_region_to_mg }.from_self!
+        select_all.select_more { mod_region_to_mg }.from_self
       end
 
       def lob_filter(params={})
         date = params.fetch(:on)
         lobs = params.fetch(:value)
         ds   = DST::EnrollmentRecord.eligible_on(:year => date.year, :month => date.month).where(:orig_lob_id => lobs).select_group(:mem_id)
-        join(ds, :mem_id => :mem_no).select_all.from_self!
+        join(ds, :mem_id => :mem_no).select_all.from_self
+      end
+
+      def under_age(n, on_date: Date.today)
+        cutoff_date = on_date.prev_year(n)
+        where(Sequel.lit('birth > ?', cutoff_date))
       end
 
       def not_under_age(n, params={})

@@ -26,7 +26,7 @@ module DST
                                                   .select_append { max(:prov_reg_eff_dt).as(:prov_region_eff_dt) },
                                               :provider_id => :provider, :provider_region => :region) do |j, lj, js|
           Sequel.expr(Sequel.qualify(j, :prov_region_eff_dt) => Sequel.qualify(lj, :prov_reg_eff_dt))
-        end.select_all(:self).from_self!
+        end.select_all(:self).from_self
       end
     end
   end
