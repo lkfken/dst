@@ -5,9 +5,15 @@ module PIMS
     class << self
       include SequelConnect
       def filename
-        fn = File.join(File.dirname(__FILE__), '..', 'config', 'pims_database.yml')
-        raise "#{fn} is missing" unless File.exist?(fn)
-        fn
+        default_config = File.join(File.dirname(__FILE__), '..', 'config', 'pims_database.yml')
+        raise "#{default_config} is missing" unless File.exist?(default_config)
+        local_config = File.join('.', 'config', 'pims_database.yml')
+        if File.exist?(local_config)
+          warn "Using local database.yml (#{local_config})"
+          local_config
+        else
+          default_config
+        end
       end
     end
   end

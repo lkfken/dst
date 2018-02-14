@@ -18,6 +18,7 @@ module DST
       def member_count
         select_group(:mem_id).count
       end
+
       def exclude_cancel_records
         exclude(:elig_eff_dt => :elig_exp_dt)
       end
@@ -31,6 +32,11 @@ module DST
         max_table = select_group(:mem_id).exclude_cancel_records.select_append { max(:elig_exp_dt).as(:max_exp_dt) }
                         .from_self(:alias => :maxt)
         from_self(:alias => :omax).join(max_table, { :max__mem_id => :omax__mem_id }, :table_alias => :max)
+      end
+
+      def eligible_within(span:)
+        raise "#{span} is not a range" if !span.respond_to?(:end) && !span.respond_to?(:begin)
+        exclude_cancel_records.where(Sequel.lit('ELIG_EFF_DT < ? AND ELIG_EXP_DT >= ?', span.end, span.begin))
       end
 
       def eligible_on(params={})
@@ -56,12 +62,12 @@ module DST
             ds              = DST::EnrollmentRecord.where(:mem_id => gap[:mem_id]).where('elig_exp_dt < ?', gap[:gap_begin])
             min_elig_eff_dt = ds.min(:elig_eff_dt)
             max_elig_exp_dt = ds.max(:elig_exp_dt)
-            i               = [{:mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt}]
+            i               = [{ :mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }]
             ds              = DST::EnrollmentRecord.where(:mem_id => gap[:mem_id]).where('elig_eff_dt > ?', gap[:gap_end])
             if !ds.empty?
               min_elig_eff_dt = ds.min(:elig_eff_dt)
               max_elig_exp_dt = ds.max(:elig_exp_dt)
-              i << {:mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt}
+              i << { :mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }
             end
           end
         end

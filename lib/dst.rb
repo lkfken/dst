@@ -22,7 +22,13 @@ module DST
       include SequelConnect
 
       def filename
-        File.join(File.dirname(__FILE__), '..', 'config', 'database.yml')
+        config = File.join('.', 'config', 'database.yml')
+        if File.exist?(config)
+          warn "Using local database.yml (#{config})"
+          config
+        else
+          File.join(File.dirname(__FILE__), '..', 'config', 'database.yml')
+        end
       end
 
       def stage
