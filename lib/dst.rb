@@ -22,17 +22,11 @@ module DST
       include SequelConnect
 
       def filename
-        config = File.join('.', 'config', 'database.yml')
-        if File.exist?(config)
-          warn "Using local database.yml (#{config})"
-          config
-        else
-          File.join(File.dirname(__FILE__), '..', 'config', 'database.yml')
-        end
+        File.join(File.dirname(__FILE__), '..', 'config', 'database.yml')
       end
 
       def stage
-        'production'
+        ENV['DST_DB_STAGE']
       end
 
     end

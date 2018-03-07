@@ -12,7 +12,7 @@ jruby:
 
   production:
     <<: *default
-    database: jtds:sqlserver://<%= ENV['DB_SERVER'] %>/<%= ENV['DATABASE'] %>;user=<%= ENV['DB_USER'] %>;password=<%= ENV['DB_PASSWORD'] %>
+    database: jtds:sqlserver://<%= ENV['DST_DB_SERVER'] %>/<%= ENV['DST_DATABASE'] %>;user=<%= ENV['DST_USER'] %>;password=<%= ENV['DST_PASSWORD'] %>
 
 ruby:
   default: &default_ruby
@@ -30,7 +30,7 @@ ruby:
 
   production:
     <<: *default_ruby
-    user: <%= ENV['DB_USER'] %>
-    password: <%= ENV['DB_PASSWORD'] %>
-    database: <%= ENV['DATABASE'] %>
-    dataserver: <%= ENV['DB_SERVER'] %>
+    user: <%= ENV['DST_USER'] %>
+    password: <%= ENV['DST_PASSWORD'] %>
+    database: <%= ENV['DST_DATABASE'] %>
+    dataserver: <%= ENV['DST_DB_SERVER'] %>

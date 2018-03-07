@@ -20,6 +20,10 @@ module DST
       super.to_date
     end
 
+    def begin_cov
+      super.to_date
+    end
+
     dataset_module do
       eager :with_group, :group
 

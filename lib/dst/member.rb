@@ -21,6 +21,7 @@ module DST
 
     def_column_alias :id, :mem_no
     def_column_alias :language, :primary_lang
+    def_column_alias :effective_date, :beg_cov
 
     ########## associations ##########
 

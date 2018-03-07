@@ -5,15 +5,10 @@ module PIMS
     class << self
       include SequelConnect
       def filename
-        default_config = File.join(File.dirname(__FILE__), '..', 'config', 'pims_database.yml')
-        raise "#{default_config} is missing" unless File.exist?(default_config)
-        local_config = File.join('.', 'config', 'pims_database.yml')
-        if File.exist?(local_config)
-          warn "Using local database.yml (#{local_config})"
-          local_config
-        else
-          default_config
-        end
+        File.join(File.dirname(__FILE__), '..', 'config', 'pims_database.yml')
+      end
+      def stage
+        ENV['PIM_DB_STAGE']
       end
     end
   end
