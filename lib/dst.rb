@@ -40,46 +40,71 @@ module DST
   # ie: DST.cchp_lobs
   extend self
 
-  def cchp_lobs
-    commercial_lobs.concat(exchange_lobs).concat(medicare_lobs).concat(ppo_lobs)
-  end
-
-  def off_exchange_lobs
-    off_exchange_group_lobs.concat(off_exchange_ifp_lobs)
-  end
-
-  def off_exchange_ifp_lobs
-    %w[200 220 230]
-  end
-
-  def off_exchange_group_lobs
-    %w[100 110 130]
-  end
-
-  def employer_sponsored_coverage_lobs
-    off_exchange_group_lobs.concat(%w[140])
-  end
-
-  def commercial_lobs
-    off_exchange_group_lobs.concat(off_exchange_ifp_lobs)
-  end
-
-  def exchange_lobs
+  def on_exchange_lobs
     %w[140 240]
   end
 
-  alias_method :on_exchange_lobs, :exchange_lobs
-
-  def medicare_lobs
-    %w[250 253 256]
-  end
+  alias_method :exchange_lobs, :on_exchange_lobs
+  alias_method :on_exchange_hmo_lobs, :on_exchange_lobs
 
   def ppo_lobs
     %w[130 230]
   end
 
+  def employer_sponsored_lobs
+    %w[100 110 130 140]
+  end
+
+  def ifp_lobs
+    %w[200 220 230 240]
+  end
+
+  def medicare_lobs
+    %w[250 253 256]
+  end
+
   def tpa_lobs
     300..2000
+  end
+
+  def cchp_lobs
+    employer_sponsored_lobs | ifp_lobs | medicare_lobs
+  end
+
+  def hmo_lobs
+    cchp_lobs - ppo_lobs
+  end
+
+  def off_exchange_lobs
+    cchp_lobs - exchange_lobs
+  end
+
+  def off_exchange_commercial_lobs
+    off_exchange_lobs - medicare_lobs
+  end
+
+  def off_exchange_commercial_hmo_lobs
+    off_exchange_commercial_lobs & hmo_lobs
+  end
+
+  def off_exchange_ifp_lobs
+    off_exchange_lobs & ifp_lobs
+  end
+
+  def off_exchange_hmo_lobs
+    off_exchange_lobs & hmo_lobs
+  end
+
+  def off_exchange_ifp_hmo_lobs
+    off_exchange_ifp_lobs & off_exchange_hmo_lobs
+  end
+
+  def off_exchange_group_lobs
+    off_exchange_lobs & employer_sponsored_lobs
+  end
+
+  def off_exchange_group_hmo_lobs
+    off_exchange_group_lobs & hmo_lobs
   end
 
   def cchp_service_area_zip_codes
@@ -110,3 +135,4 @@ require_relative 'dst/provider_medical_group_status'
 require_relative 'dst/other_insurance'
 require_relative 'dst/insurance_company'
 require_relative 'dst/claim_base_record'
+require_relative 'dst/data_refresh_tracker'

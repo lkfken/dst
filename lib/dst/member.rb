@@ -150,7 +150,7 @@ module DST
     end
 
     dataset_module do
-      subset :commercial, :mem_lob => DST.commercial_lobs
+      subset :commercial, :mem_lob => DST.off_exchange_commercial_lobs
       subset :exchange, :mem_lob => DST.exchange_lobs
       subset :hill_pcp, :mem_region => 'HPMG'
       subset :pcp_assigned, Sequel.~(:physician => ['999999', '999998', ''])

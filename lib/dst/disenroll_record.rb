@@ -27,6 +27,11 @@ module DST
     dataset_module do
       eager :with_group, :group
 
+      def within(span:)
+        raise "#{span} is not a range" if !span.respond_to?(:end) && !span.respond_to?(:begin)
+        exclude_cancel_records.where(Sequel.lit('BEGIN_COV < ? AND DISENR_DT >= ?', span.end, span.begin))
+      end
+
       def exclude_cancel_records
         exclude(:begin_cov => :disenr_dt)
       end
