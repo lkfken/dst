@@ -50,47 +50,49 @@ module DST
         exclude_cancel_records.where(lit)
       end
 
-      def islands(id)
-        gaps = gaps(id)
+      def islands(partition)
+        gaps = gaps(partition)
         case
         when gaps.empty?
-          min_elig_eff_dt = DST::EnrollmentRecord.where(:mem_id => id).min(:elig_eff_dt)
-          max_elig_exp_dt = DST::EnrollmentRecord.where(:mem_id => id).max(:elig_exp_dt)
-          [{ :mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }]
+          min_elig_eff_dt = DST::EnrollmentRecord.where(partition).min(:elig_eff_dt)
+          max_elig_exp_dt = DST::EnrollmentRecord.where(partition).max(:elig_exp_dt)
+          [{ :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }]
         else
           gaps.flat_map do |gap|
-            ds              = DST::EnrollmentRecord.where(:mem_id => gap[:mem_id]).where('elig_exp_dt < ?', gap[:gap_begin])
+            ds              = DST::EnrollmentRecord.where(partition).where('elig_exp_dt < ?', gap[:gap_begin])
             min_elig_eff_dt = ds.min(:elig_eff_dt)
             max_elig_exp_dt = ds.max(:elig_exp_dt)
-            i               = [{ :mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }]
-            ds              = DST::EnrollmentRecord.where(:mem_id => gap[:mem_id]).where('elig_eff_dt > ?', gap[:gap_end])
+            i               = [{:elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }]
+            ds              = DST::EnrollmentRecord.where(partition).where('elig_eff_dt > ?', gap[:gap_end])
             if !ds.empty?
               min_elig_eff_dt = ds.min(:elig_eff_dt)
               max_elig_exp_dt = ds.max(:elig_exp_dt)
-              i << { :mem_id => id, :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }
+              i << { :elig_eff_dt => min_elig_eff_dt, :elig_exp_dt => max_elig_exp_dt }
             end
           end
         end
       end
 
-      def gaps(id)
-        statement = <<-SQL
+      def gaps(partition)
+        columns       = partition.keys.join(',').upcase
+        filter_clause = partition.map { |a| "[#{a[0].upcase}] = N'#{a[1]}'" }.join(' AND ')
+        statement     = <<-SQL
           WITH C1 AS (
             SELECT
-            mem_id,
+            #{columns},
             ts,
             Type,
             e = CASE Type
                 WHEN 1
                   THEN NULL
                 ELSE ROW_NUMBER()
-                OVER (PARTITION BY mem_id, Type
+                OVER (PARTITION BY #{columns}, Type
                   ORDER BY elig_exp_dt) END,
             s = CASE Type
                 WHEN -1
                   THEN NULL
                 ELSE ROW_NUMBER()
-                OVER (PARTITION BY mem_id, Type
+                OVER (PARTITION BY #{columns}, Type
                   ORDER BY elig_eff_dt) END
             FROM wd_enrollment_base_view
             CROSS APPLY (VALUES (1, elig_eff_dt), (-1, elig_exp_dt)) a(Type, ts)),
@@ -98,50 +100,51 @@ module DST
             SELECT
               C1.*,
                 se = ROW_NUMBER()
-              OVER (PARTITION BY mem_id
+              OVER (PARTITION BY #{columns}
                 ORDER BY ts, Type DESC)
             FROM C1),
           C3 AS (
             SELECT
-              mem_id,
+              #{columns},
               ts,
                 grpnm = FLOOR((ROW_NUMBER()
-                               OVER (PARTITION BY mem_id
+                               OVER (PARTITION BY #{columns}
                                  ORDER BY ts) - 1) / 2 + 1)
             FROM C2
             WHERE COALESCE(s - (se - s) - 1, (se - e) - e) = 0),
           -- C1, C2, C3, C4 combined remove the overlapping date periods
           C4 AS (
             SELECT
-              mem_id,
+              #{columns},
                 elig_eff_dt = MIN(ts),
                 elig_exp_dt = MAX(ts)
             FROM C3
-            GROUP BY mem_id, grpnm)
+            GROUP BY #{columns}, grpnm)
           SELECT
-            mem_id,
+            #{columns},
               gap_begin = MIN(newdate),
               gap_end = MAX(newdate)
           FROM (
                  SELECT
-                   mem_id,
+                   #{columns},
                    newdate,
                      rn = ROW_NUMBER()
-                          OVER (PARTITION BY mem_id
+                          OVER (PARTITION BY #{columns}
                             ORDER BY newdate) / 2
                  FROM C4 a
                    CROSS APPLY (
                                  VALUES (elig_eff_dt - 1), (elig_exp_dt + 1)) b(newdate)
           ) a
-          WHERE mem_id = ?
-          GROUP BY mem_id, rn
+          WHERE #{filter_clause}
+          GROUP BY #{columns}, rn
           HAVING COUNT(*) = 2
-          ORDER BY mem_id, gap_begin;
+          ORDER BY #{columns}, gap_begin;
         SQL
 
-        rs = DST::DB.fetch(statement, id).all
+        rs = DST::DB.fetch(statement).all
         rs.select { |r| r[:gap_begin].to_date.next_day != r[:gap_end].to_date }
       end
     end
+
   end
 end

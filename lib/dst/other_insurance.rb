@@ -56,6 +56,10 @@ module DST
       def active
         where(:mem_other_ins_exp_dt => Date.civil(2999, 12, 31))
       end
+
+      def eligible_on(date: Date.today)
+        where(Sequel.lit('mem_other_ins_elig_dt <= ? and mem_other_ins_exp_dt > ?', date, date))
+      end
     end
 
   end

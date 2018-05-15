@@ -7,21 +7,21 @@ require_relative 'member/rx_data'
 # require_relative 'enrollment_record' unless defined?(DST::EnrollmentRecord)
 
 module DST
-  class Member < ::Sequel::Model(::DST::DB)
+  class Member < ::Sequel::Model(::DST::DB[:members_base_view])
     class NoPreviousPCP < StandardError
     end
+
     include DST::MemberInstanceMethods::Boolean
     include DST::MemberInstanceMethods::Group
     include DST::MemberInstanceMethods::LOB
     include DST::MemberInstanceMethods::RxData
     include DST::MemberInstanceMethods::MedicalGroup
 
-    set_dataset :members_base_view
+    # set_dataset :members_base_view
     set_primary_key :mem_no
 
     def_column_alias :id, :mem_no
     def_column_alias :language, :primary_lang
-    def_column_alias :effective_date, :beg_cov
 
     ########## associations ##########
 
@@ -67,7 +67,17 @@ module DST
     end
 
     def disenroll_date
-      is_active? ? Date.civil(2999, 12, 31) : disenroll_records_dataset.last_disenroll_records.first.disenr_dt
+      is_active? ? Date.civil(2999, 12, 31) : last_disenroll_record.disenr_dt
+    end
+
+    def last_disenroll_record
+      record = disenroll_records_dataset.last_disenroll_records.first
+      raise(DST::NoEligibilityError, "#{mem_no} has no eligibility!") if record.nil?
+      record
+    end
+
+    def effective_date
+      is_active? ? beg_cov.to_date : last_disenroll_record.begin_cov
     end
 
     def phones
